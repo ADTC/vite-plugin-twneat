@@ -1,31 +1,39 @@
 # vite-plugin-twneat
 
-A Vite plugin that organizes Tailwind responsive prefixes into a neat and readable format. Only works for Tailwind v4.
+A Vite plugin that organizes Tailwind responsive prefixes into a neat and readable format.
+
+> [!NOTE]
+> Works for Tailwind v4 only.
 
 ## Problem
 
 When working with responsive designs in Tailwind CSS, your markup can quickly become cluttered and difficult to read:
 
 ```jsx
-<div className="h-[20px] w-[40px] sm:h-[30px] md:h-[40px] lg:h-[50px] sm:w-[50px] md:w-[60px] lg:w-[70px] xl:hidden">
+<div className="flex h-[20px] w-[40px] sm:h-[30px] md:h-[40px] lg:h-[50px] sm:w-[50px] md:w-[60px] lg:w-[70px] xl:hidden max-sm:flex-col max-sm:gap-2">
   Content
 </div>
 ```
 
-Tailwind also does not allow you to create dynamic classes (at least as of writing this). Tailwind reads all your files and extracts all valid classes written in plain text. Previously the idea of a safelist seem to be supported explicitly in v3 (I think) but seems not to be the case anymore in v4 as it moved to a pure css config. So instead, what you can do is just chuck a bunch of classes in plaintext into a text file and tailwind will pick it up.
+Tailwind also does not allow you to create dynamic classes. It reads all your files and extracts all valid classes written in plain text.
+
+Previously the idea of a safelist seemed to be supported explicitly in v3 _(I think)_ but it seems to not be the case anymore in v4 as it moved to a pure CSS config.
 
 ## Solution
 
-`vite-plugin-twneat` (might) help you organize your responsive classes by breakpoint, making your code more readable and maintainable:
+Chuck a bunch of classes into a text file and Tailwind will pick it up. (`vite-plugin-twneat` automates this for you!)
+
+`vite-plugin-twneat` helps you organize your responsive classes by breakpoint, making your code more readable and maintainable:
 
 ```jsx
 <div
   className={twneat({
-    base: "h-[20px] w-[40px]",
+    base: "flex h-[20px] w-[40px]",
     sm: "h-[30px] w-[50px]",
-    md: "h-[40px] md:w-[60px]",
+    md: "h-[40px] w-[60px]",
     lg: "h-[50px] w-[70px]",
     xl: "hidden",
+    "max-sm": "flex-col gap-2",
   })}
 >
   Content
@@ -84,15 +92,18 @@ function MyComponent() {
 }
 ```
 
-## How It Works and Details
+## How It Works
 
-1. The plugin runs a regex and extracts all objects that has the signature `twneat({})`
-2. The twneat() function just concats the breakpoint with the class, then runs `clsx` over it and passes it to "className" or whatever you are using.
-3. All safelist files are placed in a single directory with the original file's directory and filename (slashes replaced with underscore) and then given the extension `.twneat`.
+1. The plugin uses a regex to extract all objects with the signature `twneat({})`, then generates safelist files using the extracted objects.
+2. The `twneat()` function concatenates the breakpoint with the classes, then runs `clsx` over it and passes it to `className` or whatever you are using.
+3. All safelist files are placed in a single directory with the original file's path and filename (slashes replaced with underscores) and then given the extension `.twneat`.
 4. During development, the plugin automatically updates the safelist files when you modify your code. During build, it pre-processes all files to generate safelists.
-5. "sm: h-4 p-4" etc. will become "sm:h-4 sm:p-4" but "base: h-4 p-4" becomes "h-4, p-4" - the base is dropped.
-5. You can't mark the twneat directory as gitignore - tailwind seems to ignore it in tandem when you do that.
-6. I have only tested this for react and astro, but not for anything else. However it should work on any framework.
+5. `sm: "h-4 p-4"` becomes `sm:h-4 sm:p-4` but `base: "h-4 p-4"` becomes `h-4 p-4` - the `base` is dropped.
+
+## Important Details
+
+1. You can't add the `twneat` directory in `.gitignore` - Tailwind will ignore it in tandem if you do that.
+2. I have only tested this for React and Astro. However it should work on any framework.
 
 ## License
 
